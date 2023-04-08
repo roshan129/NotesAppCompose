@@ -8,7 +8,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.roshanadke.notesappcompose.ui.screens.NotesMainScreen
+import com.roshanadke.notesappcompose.ui.screens.NotesScreen
 import com.roshanadke.notesappcompose.ui.theme.NotesAppComposeTheme
+import com.roshanadke.notesappcompose.ui.viewmodels.NotesViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,7 +24,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NotesMainScreen()
+
+                    //NotesMainScreen()
+                    NotesScreen()
                 }
             }
         }
