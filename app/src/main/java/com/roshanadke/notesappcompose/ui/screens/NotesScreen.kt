@@ -22,15 +22,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.roshanadke.notesappcompose.db.Note
 import com.roshanadke.notesappcompose.ui.viewmodels.NotesViewModel
+import com.roshanadke.notesappcompose.utils.Screen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
-    notesViewModel: NotesViewModel = viewModel()
+    notesViewModel: NotesViewModel = hiltViewModel(),
+    navController: NavController
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -50,9 +53,8 @@ fun NotesScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-
+                navController.navigate(Screen.AddEditNotesScreen.route + "/ ")
             }) {
-
                 Icon(Icons.Filled.Add, contentDescription = "Add Note")
             }
         },

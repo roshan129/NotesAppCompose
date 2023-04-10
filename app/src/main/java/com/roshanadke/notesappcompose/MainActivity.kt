@@ -26,7 +26,8 @@ class MainActivity : ComponentActivity() {
                 ) {
 
                     //NotesMainScreen()
-                    NotesScreen()
+                    //NotesScreen()
+                    Navigation()
                 }
             }
         }
