@@ -32,6 +32,10 @@ class NotesViewModel @Inject constructor(
         Log.d("TAG", "insertNote: $a")
     }
 
+    suspend fun deleteNote(note: Note) = viewModelScope.launch {
+        val a = noteDao.deleteNote(note)
+        Log.d("TAG", "deleteNote: $a")
+    }
 
     suspend fun printLine(text: String) {
         Log.d("TAG", "printLine: text:  ${text}")

@@ -28,7 +28,10 @@ fun Navigation() {
                 defaultValue = ""
             })
         ) { navBackStackEntry ->
-            AddEditNotesScreen(note = navBackStackEntry.arguments?.getString("noteBody"))
+            AddEditNotesScreen(
+                navController = navController,
+                note = navBackStackEntry.arguments?.getString("noteBody")
+            )
         }
 
     }

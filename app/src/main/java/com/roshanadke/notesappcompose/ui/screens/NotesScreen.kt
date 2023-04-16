@@ -1,14 +1,26 @@
 package com.roshanadke.notesappcompose.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -17,16 +29,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.roshanadke.notesappcompose.db.Note
 import com.roshanadke.notesappcompose.ui.viewmodels.NotesViewModel
 import com.roshanadke.notesappcompose.utils.Screen
+import com.roshanadke.notesappcompose.utils.formatDate
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +85,7 @@ fun NotesScreen(
             modifier = Modifier.padding(contentPadding)
         ) {
             Column {
-                Button(
+                /*Button(
                     onClick = {
                         coroutineScope.launch {
                             notesViewModel.insertNote(
@@ -81,12 +101,15 @@ fun NotesScreen(
                         .padding(16.dp)
                 ) {
                     Text(text = "Insert Note")
-                }
-
+                }*/
 
                 LazyColumn {
                     items(notesList) {
-                        NotesCard(body = it.body)
+                        NotesCard(it) {note ->
+                            coroutineScope.launch {
+                                notesViewModel.deleteNote(note)
+                            }
+                        }
                     }
                 }
             }
@@ -94,5 +117,96 @@ fun NotesScreen(
 
     }
 
+}
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun NotesCard(note: Note, onDeleteClicked: (note: Note) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+    ) {
+
+        var showDialog by remember { mutableStateOf(false) }
+
+        if(showDialog) {
+            MyDialogBox(onDismissClicked = { showDialog = false },
+            onConfirmClicked = {
+                onDeleteClicked(note)
+                showDialog = false
+            })
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = {
+
+                    },
+                    onLongClick = {
+                        //show dialog popup
+                        showDialog = true
+                    }
+                ),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+                /*containerColor = MaterialTheme.colorScheme.surfaceVariant,*/
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 4.dp
+            ),
+
+
+            ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = note.body, modifier = Modifier
+                        .weight(1.5f)
+                        .padding(12.dp),
+                )
+                Text(
+                    text = formatDate(note.createdDateFormatted),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(12.dp),
+                    textAlign = TextAlign.End,
+                    fontSize = 12.sp
+                )
+
+            }
+        }
+
+
+    }
+
+}
+
+@Composable
+fun MyDialogBox(onConfirmClicked: () -> Unit, onDismissClicked: () -> Unit) {
+
+
+    AlertDialog(
+        onDismissRequest = onDismissClicked,
+        title = { Text("Confirm!") },
+        text = { Text("Do you want to delete this note?") },
+        confirmButton = {
+            Button(onClick = onConfirmClicked
+            ) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismissClicked) {
+                Text("No")
+            }
+        }
+    )
 }

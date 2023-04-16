@@ -2,6 +2,7 @@ package com.roshanadke.notesappcompose.db
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -18,5 +19,8 @@ interface NoteDao {
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateNote(note: Note): Int
+
+    @Delete
+    suspend fun deleteNote(note: Note): Int
 
 }
