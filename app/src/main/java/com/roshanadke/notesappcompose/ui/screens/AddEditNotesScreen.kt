@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -52,7 +53,7 @@ fun AddEditNotesScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var text by rememberSaveable {
-        mutableStateOf("")
+        mutableStateOf(note ?: "")
     }
 
     Scaffold(
@@ -83,9 +84,11 @@ fun AddEditNotesScreen(
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 coroutineScope.launch {
-                    notesViewModel.insertNote(
-                        Note(text.trim())
-                    )
+                    text.let {
+                        notesViewModel.insertNote(
+                            Note(it.trim())
+                        )
+                    }
                     navController.popBackStack()
                 }
 

@@ -114,15 +114,21 @@ fun NotesScreen(
         floatingActionButtonPosition = FabPosition.Center
     ) { contentPadding ->
 
+        fun onCardItemClicked(note: Note) {
+            navController.navigate(Screen.AddEditNotesScreen.route + "/${note.body}")
+        }
+
         Box(
             modifier = Modifier.padding(contentPadding)
         ) {
             Column {
 
-                if(listType == ListType.NormaList.type) {
+                if (listType == ListType.NormaList.type) {
                     LazyColumn {
                         items(notesList) {
-                            NotesCard(it) { note ->
+                            NotesCard(it, onCardClicked = { note ->
+                                onCardItemClicked(note)
+                            }) { note ->
                                 coroutineScope.launch {
                                     notesViewModel.deleteNote(note)
                                 }
@@ -132,7 +138,9 @@ fun NotesScreen(
                 } else {
                     LazyVerticalGrid(columns = GridCells.Fixed(2), content = {
                         items(notesList) {
-                            NotesCard(it) { note ->
+                            NotesCard(it, onCardClicked = { note ->
+                                onCardItemClicked(note)
+                            }) { note ->
                                 coroutineScope.launch {
                                     notesViewModel.deleteNote(note)
                                 }
@@ -150,11 +158,15 @@ fun NotesScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NotesCard(note: Note, onDeleteClicked: (note: Note) -> Unit) {
+fun NotesCard(
+    note: Note,
+    onCardClicked: (note: Note) -> Unit,
+    onDeleteClicked: (note: Note) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
 
         var showDialog by remember { mutableStateOf(false) }
@@ -172,7 +184,7 @@ fun NotesCard(note: Note, onDeleteClicked: (note: Note) -> Unit) {
                 .fillMaxWidth()
                 .combinedClickable(
                     onClick = {
-
+                        onCardClicked.invoke(note)
                     },
                     onLongClick = {
                         //show dialog popup
