@@ -1,5 +1,6 @@
 package com.roshanadke.notesappcompose.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -77,6 +78,10 @@ fun NotesScreen(
         mutableStateOf(ListType.NormaList.type)
     }
 
+    val note = Note("abcd")
+
+    Log.d("TAG", "NotesScreen a: ${note.toString()} ")
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,7 +111,8 @@ fun NotesScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate(Screen.AddEditNotesScreen.route + "/ ")
+                val emptyNote = Note("")
+                navController.navigate(Screen.AddEditNotesScreen.route + "/${emptyNote}")
             }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Note")
             }
@@ -115,7 +121,7 @@ fun NotesScreen(
     ) { contentPadding ->
 
         fun onCardItemClicked(note: Note) {
-            navController.navigate(Screen.AddEditNotesScreen.route + "/${note.body}")
+            navController.navigate(Screen.AddEditNotesScreen.route + "/${note}")
         }
 
         Box(
