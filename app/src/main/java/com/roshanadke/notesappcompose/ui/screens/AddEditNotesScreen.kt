@@ -50,7 +50,7 @@ fun AddEditNotesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Add Note",
+                        text = if(note?.body.isNullOrEmpty()) "Add Note" else "Edit Note",
                         modifier = Modifier.padding(start = 12.dp)
                     )
                 },
