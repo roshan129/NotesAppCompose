@@ -1,9 +1,6 @@
 package com.roshanadke.notesappcompose.ui.screens
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +13,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,18 +39,15 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +61,7 @@ import com.roshanadke.notesappcompose.utils.SearchWidgetState
 import com.roshanadke.notesappcompose.utils.getDisplayDate
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun NotesScreen(
     notesViewModel: NotesViewModel = hiltViewModel(),
@@ -77,7 +70,8 @@ fun NotesScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    val notes = notesViewModel.allNotes.observeAsState()
+    notesViewModel.getNotesBySearch(notesViewModel.searchTextState.value)
+    val notes = notesViewModel.notesMainList
     val listTypeState by notesViewModel.listTypeState
     val searchWidgetState by notesViewModel.searchWidgetState
     val searchTextState by notesViewModel.searchTextState
@@ -104,10 +98,11 @@ fun NotesScreen(
                          notesViewModel.updateSearchTextState(it)
                      },
                      onSearchClicked = {
-                         Log.d("TAG", "NotesScreen: search text: $it ")
+                         //notesViewModel.getNotesBySearch(searchTextState)
                      },
                      onCloseClicked = {
                          notesViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
+                         notesViewModel.updateSearchTextState("")
                      },
                      onSearchTriggered = {
                          notesViewModel.updateSearchWidgetState(SearchWidgetState.OPEN)
@@ -226,7 +221,6 @@ fun DefaultAppBar(
                 }
             }
             IconButton(onClick = {
-                Toast.makeText(context, "clicked", Toast.LENGTH_LONG).show()
                 onSearchTriggered()
 
             }) {
@@ -248,7 +242,9 @@ fun SearchAppBar(
     onCloseClicked: () -> Unit,
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
     ) {
         TextField(
             value = text,

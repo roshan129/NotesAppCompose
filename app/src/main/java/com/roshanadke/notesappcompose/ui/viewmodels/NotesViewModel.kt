@@ -22,18 +22,31 @@ class NotesViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    private var _notesMainList: MutableState<List<Note>> = mutableStateOf(arrayListOf())
+    val notesMainList: State<List<Note>> = _notesMainList
+    //val notesMainList: State<Note> get() = _notesMainList!!
+
+
     var allNotes: LiveData<List<Note>> = noteDao.getAllNotes()
 
-    private var _listTypeState: MutableState<ListTypeState> = mutableStateOf(value = ListTypeState.NormaList)
+    private var _listTypeState: MutableState<ListTypeState> =
+        mutableStateOf(value = ListTypeState.NormaList)
     val listTypeState: State<ListTypeState> = _listTypeState
 
-    private var _searchWidgetState: MutableState<SearchWidgetState> = mutableStateOf(value = SearchWidgetState.CLOSED)
+    private var _searchWidgetState: MutableState<SearchWidgetState> =
+        mutableStateOf(value = SearchWidgetState.CLOSED)
     val searchWidgetState: State<SearchWidgetState> = _searchWidgetState
 
     private var _searchTextState: MutableState<String> = mutableStateOf(value = "")
     val searchTextState: State<String> = _searchTextState
+
+
+    fun getNotesBySearch(searchText: String) =  viewModelScope.launch {
+        _notesMainList.value = noteDao.getNotesBySearchQuery(searchText)
+    }
+
     fun changeListTypeState() {
-        if(listTypeState.value == ListTypeState.NormaList) {
+        if (listTypeState.value == ListTypeState.NormaList) {
             _listTypeState.value = ListTypeState.GridList
         } else {
             _listTypeState.value = ListTypeState.NormaList

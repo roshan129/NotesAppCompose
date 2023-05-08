@@ -14,6 +14,9 @@ interface NoteDao {
     @Query("Select * from Note")
     fun getAllNotes(): LiveData<List<Note>>
 
+    @Query("Select * from Note where body LIKE '%' || :query || '%'")
+    suspend fun getNotesBySearchQuery(query: String): List<Note>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: Note): Long
 
