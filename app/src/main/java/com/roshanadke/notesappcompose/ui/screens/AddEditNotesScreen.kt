@@ -18,12 +18,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -31,7 +36,7 @@ import com.roshanadke.notesappcompose.db.Note
 import com.roshanadke.notesappcompose.ui.viewmodels.NotesViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun AddEditNotesScreen(
     navController: NavController,
@@ -50,7 +55,7 @@ fun AddEditNotesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if(note?.body.isNullOrEmpty()) "Add Note" else "Edit Note",
+                        text = if (note?.body.isNullOrEmpty()) "Add Note" else "Edit Note",
                         modifier = Modifier.padding(start = 12.dp)
                     )
                 },
@@ -97,6 +102,13 @@ fun AddEditNotesScreen(
                 .padding(it)
                 .verticalScroll(rememberScrollState())
         ) {
+
+            val focusRequester = remember { FocusRequester() }
+
+            LaunchedEffect(Unit) {
+                if(noteBody.isEmpty()) focusRequester.requestFocus()
+            }
+
             TextField(
                 value = noteBody,
                 onValueChange = {
@@ -105,7 +117,7 @@ fun AddEditNotesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp)
-
+                    .focusRequester(focusRequester = focusRequester)
 
             )
         }

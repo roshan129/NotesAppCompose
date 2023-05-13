@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.roshanadke.notesappcompose.db.Note
 import com.roshanadke.notesappcompose.db.NoteDao
 import com.roshanadke.notesappcompose.utils.ListTypeState
+import com.roshanadke.notesappcompose.utils.MultiSelectionState
 import com.roshanadke.notesappcompose.utils.SearchWidgetState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -40,8 +41,14 @@ class NotesViewModel @Inject constructor(
     private var _searchTextState: MutableState<String> = mutableStateOf(value = "")
     val searchTextState: State<String> = _searchTextState
 
+    private var _multiSelectionState: MutableState<MultiSelectionState> =
+        mutableStateOf(MultiSelectionState.CLOSED)
+    val multiSelectionState: State<MultiSelectionState> = _multiSelectionState
 
-    fun getNotesBySearch(searchText: String) =  viewModelScope.launch {
+    private var _multiSelectedListItems: MutableState<List<Note>> = mutableStateOf(arrayListOf())
+    val multiSelectedListItems: State<List<Note>> = _multiSelectedListItems
+
+    fun getNotesBySearch(searchText: String) = viewModelScope.launch {
         _notesMainList.value = noteDao.getNotesBySearchQuery(searchText)
     }
 
@@ -61,6 +68,27 @@ class NotesViewModel @Inject constructor(
         _searchTextState.value = newValue
     }
 
+    fun updateMultiSelectionState(newValue: MultiSelectionState) {
+        _multiSelectionState.value = newValue
+        if (newValue == MultiSelectionState.CLOSED) {
+            emptyMultiSelectionList()
+        }
+    }
+
+    private fun emptyMultiSelectionList() {
+        _multiSelectedListItems.value = emptyList()
+    }
+
+    fun addOrRemoveItemInMultiSelectedList(newItem: Note) {
+        if (_multiSelectedListItems.value.contains(newItem)) {
+            _multiSelectedListItems.value =
+                _multiSelectedListItems.value.filterNot { it == newItem }
+        } else {
+            _multiSelectedListItems.value = _multiSelectedListItems.value + newItem
+
+        }
+    }
+
     fun getAllNotes() = viewModelScope.launch {
         allNotes = noteDao.getAllNotes() as MutableLiveData<List<Note>>
     }
@@ -70,7 +98,19 @@ class NotesViewModel @Inject constructor(
     }
 
     suspend fun deleteNote(note: Note) = viewModelScope.launch {
-        val a = noteDao.deleteNote(note)
+        noteDao.deleteNote(note)
+        getNotesBySearch("")
+    }
+
+    suspend fun deleteMultipleNotes(note: List<Note>) = viewModelScope.launch {
+        val noteIdList = note.map {
+            it.id!!
+        }
+        noteIdList.let {
+            noteDao.deleteNotes(noteIdList)
+        }
+        emptyMultiSelectionList()
+        getNotesBySearch("")
     }
 
     suspend fun printLine(text: String) {

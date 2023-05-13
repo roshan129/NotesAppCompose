@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ThumbUp
@@ -44,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -60,9 +62,12 @@ import androidx.navigation.NavController
 import com.roshanadke.notesappcompose.db.Note
 import com.roshanadke.notesappcompose.ui.viewmodels.NotesViewModel
 import com.roshanadke.notesappcompose.utils.ListTypeState
+import com.roshanadke.notesappcompose.utils.MultiSelectionState
 import com.roshanadke.notesappcompose.utils.Screen
 import com.roshanadke.notesappcompose.utils.SearchWidgetState
 import com.roshanadke.notesappcompose.utils.getDisplayDate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -79,6 +84,8 @@ fun NotesScreen(
     val listTypeState by notesViewModel.listTypeState
     val searchWidgetState by notesViewModel.searchWidgetState
     val searchTextState by notesViewModel.searchTextState
+    val multiSelectionState by notesViewModel.multiSelectionState
+    val multiSelectedList by notesViewModel.multiSelectedListItems
 
 
     var notesList: List<Note> = remember {
@@ -91,27 +98,39 @@ fun NotesScreen(
 
     Scaffold(
         topBar = {
-                 MainAppBar(
-                     searchWidgetState = searchWidgetState,
-                     searchTextState = searchTextState,
-                     listTypeState = listTypeState,
-                     onListTypeIconClicked = {
-                         notesViewModel.changeListTypeState()
-                     },
-                     onTextChanged = {
-                         notesViewModel.updateSearchTextState(it)
-                     },
-                     onSearchClicked = {
-                         //notesViewModel.getNotesBySearch(searchTextState)
-                     },
-                     onCloseClicked = {
-                         notesViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
-                         notesViewModel.updateSearchTextState("")
-                     },
-                     onSearchTriggered = {
-                         notesViewModel.updateSearchWidgetState(SearchWidgetState.OPEN)
-                     }
-                 )
+            MainAppBar(
+                multiSelectionList = multiSelectedList,
+                searchWidgetState = searchWidgetState,
+                multiSelectionState = multiSelectionState,
+                searchTextState = searchTextState,
+                listTypeState = listTypeState,
+                onListTypeIconClicked = {
+                    notesViewModel.changeListTypeState()
+                },
+                onTextChanged = {
+                    notesViewModel.updateSearchTextState(it)
+                },
+                onSearchClicked = {
+                    //notesViewModel.getNotesBySearch(searchTextState)
+                },
+                onCloseClicked = {
+                    notesViewModel.updateSearchWidgetState(SearchWidgetState.CLOSED)
+                    notesViewModel.updateSearchTextState("")
+                },
+                onSearchTriggered = {
+                    notesViewModel.updateSearchWidgetState(SearchWidgetState.OPEN)
+                },
+                onMultiSelectionCloseClicked = {
+                    notesViewModel.updateMultiSelectionState(MultiSelectionState.CLOSED)
+                },
+                onMultiSelectionDeleteClicked = {
+                    if(multiSelectedList.isNotEmpty()) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            notesViewModel.deleteMultipleNotes(multiSelectedList)
+                        }
+                    }
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -125,40 +144,59 @@ fun NotesScreen(
     ) { contentPadding ->
 
         fun onCardItemClicked(note: Note) {
-            navController.navigate(Screen.AddEditNotesScreen.route + "/${note}")
+            if (multiSelectionState == MultiSelectionState.OPEN) {
+                notesViewModel.addOrRemoveItemInMultiSelectedList(newItem = note)
+            } else {
+                navController.navigate(Screen.AddEditNotesScreen.route + "/${note}")
+            }
         }
 
         Box(
             modifier = Modifier.padding(contentPadding)
         ) {
             Column {
-
                 if (listTypeState == ListTypeState.NormaList) {
                     LazyColumn {
                         items(notesList) {
-                            NotesCard(it, onCardClicked = { note ->
-                                onCardItemClicked(note)
-                            }) { note ->
-                                coroutineScope.launch {
-                                    notesViewModel.deleteNote(note)
+                            NotesCard(
+                                multiSelectionList = multiSelectedList,
+                                note = it,
+                                onLongClickPressed = { note ->
+                                    notesViewModel.updateMultiSelectionState(MultiSelectionState.OPEN)
+                                    notesViewModel.addOrRemoveItemInMultiSelectedList(note)
+                                },
+                                onCardClicked = { note ->
+                                    onCardItemClicked(note)
+                                },
+                                onDeleteClicked = { note ->
+                                    coroutineScope.launch {
+                                        notesViewModel.deleteNote(note)
+                                    }
                                 }
-                            }
+                            )
                         }
                     }
                 } else {
                     LazyVerticalGrid(columns = GridCells.Fixed(2), content = {
                         items(notesList) {
-                            NotesCard(it, onCardClicked = { note ->
-                                onCardItemClicked(note)
-                            }) { note ->
-                                coroutineScope.launch {
-                                    notesViewModel.deleteNote(note)
+                            NotesCard(
+                                multiSelectionList = multiSelectedList,
+                                note = it,
+                                onLongClickPressed = {
+                                    notesViewModel.updateMultiSelectionState(MultiSelectionState.OPEN)
+                                },
+                                onCardClicked = { note ->
+                                    onCardItemClicked(note)
+                                },
+                                onDeleteClicked = { note ->
+                                    coroutineScope.launch {
+                                        notesViewModel.deleteNote(note)
+                                    }
                                 }
-                            }
+                            )
                         }
                     })
                 }
-
             }
         }
 
@@ -169,17 +207,32 @@ fun NotesScreen(
 
 @Composable
 fun MainAppBar(
+    multiSelectionList: List<Note>,
     searchWidgetState: SearchWidgetState,
+    multiSelectionState: MultiSelectionState,
     searchTextState: String,
     listTypeState: ListTypeState,
     onListTypeIconClicked: () -> Unit,
     onTextChanged: (String) -> Unit,
     onSearchClicked: (String) -> Unit,
     onCloseClicked: () -> Unit,
-    onSearchTriggered: () -> Unit
+    onSearchTriggered: () -> Unit,
+    onMultiSelectionCloseClicked: () -> Unit,
+    onMultiSelectionDeleteClicked: () -> Unit,
 ) {
 
-    if(searchWidgetState == SearchWidgetState.CLOSED) {
+    if (searchWidgetState == SearchWidgetState.CLOSED && multiSelectionState == MultiSelectionState.OPEN) {
+        MultiSelectionAppBar(
+            selectedItemsCount = multiSelectionList.size,
+            onCloseClicked = {
+                onMultiSelectionCloseClicked()
+            },
+            onDeleteClicked = {
+                // delete selected notes
+                onMultiSelectionDeleteClicked()
+            }
+        )
+    } else if (searchWidgetState == SearchWidgetState.CLOSED) {
         DefaultAppBar(
             listTypeState = listTypeState,
             onListTypeIconClicked = onListTypeIconClicked,
@@ -192,6 +245,45 @@ fun MainAppBar(
             onSearchClicked = onSearchClicked,
             onCloseClicked = onCloseClicked
         )
+    }
+}
+
+@Composable
+fun MultiSelectionAppBar(
+    selectedItemsCount: Int,
+    onCloseClicked: () -> Unit,
+    onDeleteClicked: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+
+            IconButton(onClick = {
+                onCloseClicked()
+            }) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+            }
+
+            Text(
+                text = "$selectedItemsCount Items Selected",
+                color = Color.Black,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
+            )
+            IconButton(onClick = {
+                onDeleteClicked()
+            }) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+            }
+
+        }
     }
 
 
@@ -272,7 +364,8 @@ fun SearchAppBar(
                 IconButton(onClick = {
                     onSearchClicked(text)
                 }) {
-                    Icon(imageVector = Icons.Filled.Search,
+                    Icon(
+                        imageVector = Icons.Filled.Search,
                         contentDescription = "Search Icon",
                     )
                 }
@@ -281,7 +374,8 @@ fun SearchAppBar(
                 IconButton(onClick = {
                     onCloseClicked()
                 }) {
-                    Icon(imageVector = Icons.Filled.Close,
+                    Icon(
+                        imageVector = Icons.Filled.Close,
                         contentDescription = "Close Icon",
                     )
                 }
@@ -296,7 +390,7 @@ fun SearchAppBar(
                 }
             ),
             singleLine = true,
-            colors =TextFieldDefaults.textFieldColors(
+            colors = TextFieldDefaults.textFieldColors(
                 containerColor = Color(0xFFD4E6FF),
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
@@ -312,9 +406,11 @@ fun SearchAppBar(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotesCard(
+    multiSelectionList: List<Note>,
     note: Note,
+    onLongClickPressed: (note: Note) -> Unit,
     onCardClicked: (note: Note) -> Unit,
-    onDeleteClicked: (note: Note) -> Unit
+    onDeleteClicked: (note: Note) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -332,7 +428,6 @@ fun NotesCard(
                 })
         }
 
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -342,12 +437,14 @@ fun NotesCard(
                     },
                     onLongClick = {
                         //show dialog popup
-                        showDialog = true
+                        //showDialog = true
+                        onLongClickPressed(note)
                     }
                 ),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor =
+                if (multiSelectionList.contains(note)) Color.Magenta else Color.White
                 /*containerColor = MaterialTheme.colorScheme.surfaceVariant,*/
             ),
             elevation = CardDefaults.cardElevation(
