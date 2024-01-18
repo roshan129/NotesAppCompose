@@ -1,6 +1,5 @@
-package com.roshanadke.notesappcompose.db
+package com.roshanadke.notesappcompose.data.local
 
-import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.RoomDatabase
 

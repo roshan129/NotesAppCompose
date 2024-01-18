@@ -1,4 +1,4 @@
-package com.roshanadke.notesappcompose.ui.theme
+package com.roshanadke.notesappcompose.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

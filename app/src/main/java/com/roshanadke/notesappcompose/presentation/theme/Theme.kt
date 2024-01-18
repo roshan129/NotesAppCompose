@@ -1,4 +1,4 @@
-package com.roshanadke.notesappcompose.ui.theme
+package com.roshanadke.notesappcompose.presentation.theme
 
 import android.app.Activity
 import android.os.Build
