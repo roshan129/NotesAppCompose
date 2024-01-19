@@ -9,11 +9,12 @@ import java.text.DateFormat
 @Parcelize
 @Entity
 data class Note(
+    @PrimaryKey
+    var id: Int?= null,
     var body: String,
     var updated_date: Long = System.currentTimeMillis(),
 ): Parcelable {
-    @PrimaryKey
-    var id: Int?= null
+
     val createdDateFormatted: String
         get() = DateFormat.getDateTimeInstance().format(updated_date)
 }

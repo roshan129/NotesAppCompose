@@ -2,7 +2,22 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
+      <entry key="NoteInstrumentTestNew">
+        <State />
+      </entry>
       <entry key="app">
+        <State />
+      </entry>
+      <entry key="dummy()">
+        <State />
+      </entry>
+      <entry key="dummyTest()">
+        <State />
+      </entry>
+      <entry key="testAddingNote_EditingNote_FetchingNote()">
+        <State />
+      </entry>
+      <entry key="testAddingNote_EditingNote_FetchingNote() (1)">
         <State />
       </entry>
     </value>
