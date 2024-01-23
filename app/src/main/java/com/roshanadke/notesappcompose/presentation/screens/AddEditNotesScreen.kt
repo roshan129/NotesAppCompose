@@ -44,6 +44,7 @@ fun AddEditNotesScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
+                if(input.isEmpty()) return@FloatingActionButton
                 if (isEditMode) {
                     note?.let {
                         note.body = input

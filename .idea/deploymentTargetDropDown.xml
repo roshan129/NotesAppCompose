@@ -2,16 +2,16 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="NoteInstrumentTestNew">
+      <entry key="NotesMainScreenTest">
         <State />
       </entry>
       <entry key="app">
         <State />
       </entry>
-      <entry key="dummy()">
+      <entry key="dummyTest()">
         <State />
       </entry>
-      <entry key="dummyTest()">
+      <entry key="notesScreen_VerifyDestination()">
         <State />
       </entry>
       <entry key="testAddingNote_EditingNote_FetchingNote()">
